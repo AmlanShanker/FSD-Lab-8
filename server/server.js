@@ -1,7 +1,8 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+
+const connectDB = require("./config/dbConfig.js");
 
 const authRoutes = require("./routes/authRoutes");
 const movieRoutes = require("./routes/movieRoutes");
@@ -9,38 +10,45 @@ const bookingRoutes = require("./routes/bookingRoutes");
 
 const app = express();
 
-// Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://cinebook-frontend-six.vercel.app/",
+    ],
+  }),
+);
+
 app.use(express.json());
 
-// MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB Connected");
-  })
-  .catch((error) => {
-    console.log("MongoDB Error:", error);
-  });
-
-// REST API Routes
-
-app.use("/api/auth", authRoutes);
-
-app.use("/api/movies", movieRoutes);
-
-app.use("/api/bookings", bookingRoutes);
-
-// Home
 app.get("/", (req, res) => {
   res.json({
     message: "Movie Ticket Booking REST API",
   });
 });
 
-// Server
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res.status(500).json({
+      message: "Database connection failed",
+    });
+  }
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/movies", movieRoutes);
+app.use("/api/bookings", bookingRoutes);
+
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
