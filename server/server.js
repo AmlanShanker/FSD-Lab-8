@@ -10,16 +10,7 @@ const bookingRoutes = require("./routes/bookingRoutes");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://cinebook-frontend-six.vercel.app/",
-    ],
-  }),
-);
-
+app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
